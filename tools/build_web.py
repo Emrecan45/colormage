@@ -14,16 +14,12 @@ FICHIERS_RACINE_WEB = [
     RACINE / "assets" / "img" / "ui" / "logo.ico",
 ]
 
-for fichier_audio in sorted((RACINE / "assets" / "audio").glob("*")):
-    if fichier_audio.suffix.lower() in (".wav", ".ogg") and not fichier_audio.name.startswith("placeholder_planet"):
-        FICHIERS_RACINE_WEB.append(fichier_audio)
-
 # Seuls ces elements sont embarques dans le paquet web
 A_COPIER = ["main.py", "src", "assets", "levels"]
 
 # Dossiers et extensions exclus du paquet (inutiles sur le web)
 DOSSIERS_EXCLUS = {"__pycache__", "video"}
-EXTENSIONS_EXCLUES = (".pyc", ".ico", ".wav", ".ogg")
+EXTENSIONS_EXCLUES = (".pyc", ".ico")
 PREFIXES_EXCLUS = ("placeholder_planet", "screenshot")
 
 
@@ -118,6 +114,24 @@ def ajouter_fichiers_racine(options):
             for source in FICHIERS_RACINE_WEB:
                 if source.exists():
                     zf.write(source, source.name)
+
+    web_audio = STAGING / "build" / "web" / "assets" / "audio"
+    web_audio.mkdir(parents=True, exist_ok=True)
+    audio_src = RACINE / "assets" / "audio"
+    if audio_src.exists():
+        zf = None
+        if "--archive" in options and archive.exists():
+            zf = zipfile.ZipFile(archive, "a", zipfile.ZIP_DEFLATED)
+            
+        for f in audio_src.iterdir():
+            if f.suffix in [".wav", ".ogg"]:
+                webaudio_name = f.name.replace(".wav", ".webaudio").replace(".ogg", ".webaudio")
+                shutil.copy2(f, web_audio / webaudio_name)
+                if zf:
+                    zf.write(f, f"assets/audio/{webaudio_name}")
+        
+        if zf:
+            zf.close()
 
 
 IMAGES_LANDING = [

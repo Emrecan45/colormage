@@ -24,7 +24,9 @@ def jouer(chemin):
         return False
     if EST_WEB:
         import platform
-        platform.window.colormage_play_music(os.path.basename(chemin))
+        base = os.path.basename(chemin).replace(".wav", ".webaudio").replace(".ogg", ".webaudio")
+        chemin_relatif = "assets/audio/" + base
+        platform.window.colormage_play_music(chemin_relatif)
         return True
     import pygame
     pygame.mixer.music.stop()
