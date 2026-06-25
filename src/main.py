@@ -83,7 +83,7 @@ class Game:
         # Créer l'écran
         self.plein_ecran = False
         try:
-            icone = pygame.image.load(resource_path("assets/img/ui/logo.png"))
+            icone = pygame.image.load(resource_path("assets/img/ui/logo.ico"))
             pygame.display.set_icon(icone)
         except Exception:
             pass
@@ -419,7 +419,7 @@ class Game:
             self.ecran = pygame.display.set_mode((LARGEUR_ECRAN, HAUTEUR_ECRAN), pygame.SCALED | pygame.RESIZABLE)
         pygame.display.set_caption("ColorMage")
         try:
-            icone = pygame.image.load(resource_path("assets/img/ui/logo.png"))
+            icone = pygame.image.load(resource_path("assets/img/ui/logo.ico"))
             pygame.display.set_icon(icone)
         except Exception:
             pass
@@ -583,7 +583,7 @@ class Game:
                             self.en_cours = False
 
                 elif self.etat == "profil":
-                    action = await self.profil.gerer_events(evenement)
+                    action = await self.profil.gerer_events(evenement, self.ecran)
                     if action == "quitter":
                         self.etat = "menu"
                     elif action == "reset_save":

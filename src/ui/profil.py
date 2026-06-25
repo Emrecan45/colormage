@@ -1,11 +1,12 @@
 from core.i18n import t
+import core.i18n as i18n
 import pygame
 import sys
 import os
 import random
 import math
 from datetime import datetime
-from core.config import LARGEUR_ECRAN, HAUTEUR_ECRAN, COULEUR_BOUTON, COULEUR_SURVOL, COULEUR_BORDURE, resource_path, EST_WEB
+from core.config import LARGEUR_ECRAN, HAUTEUR_ECRAN, COULEUR_BOUTON, COULEUR_SURVOL, COULEUR_BORDURE, resource_path, EST_WEB, est_tactile
 from core.son import Son
 from core.assets import police, position_centree
 from core.config_manager import ConfigManager
@@ -385,23 +386,38 @@ class Profil:
         
         return None
     
-    async def ouvrir_clavier(self):
-        """Active l'édition du pseudo et ouvre le clavier (mobile/web)."""
+    async def ouvrir_clavier(self, ecran):
         self.pseudo_avant_edition = self.pseudo
-        if EST_WEB:
+        if EST_WEB and est_tactile():
             import platform
             import asyncio
-            platform.window.colormage_show_prompt(t("profil.pseudo"), self.pseudo)
+            import json
+            self.edition_pseudo = True
+            charge = json.dumps({
+                "val": self.pseudo,
+                "label": t("profil.pseudo"),
+                "langue": i18n.langue_actuelle,
+            })
+            platform.window.colormage_show_prompt(charge)
             while not platform.window.colormage_prompt_done:
+                self.pseudo = platform.window.colormage_kb_text[:15]
+                self.afficher_profil(ecran)
+                pygame.display.flip()
                 await asyncio.sleep(0.05)
-            valeur = platform.window.colormage_prompt_result
-            if valeur is not None:
-                valeur = valeur.strip()[:15]
+            self.edition_pseudo = False
+            resultat = platform.window.colormage_prompt_result
+            if resultat is None:
+                self.pseudo = self.pseudo_avant_edition
+            else:
+                valeur = resultat.strip()[:15]
                 if valeur:
                     self.pseudo = valeur
                 else:
                     self.pseudo = self.pseudo_avant_edition
                 self.gestionnaire_config.sauvegarder_pseudo(self.pseudo)
+            self.afficher_profil(ecran)
+            pygame.display.flip()
+            pygame.event.clear()
             return
         self.edition_pseudo = True
         pygame.key.start_text_input()
@@ -410,10 +426,9 @@ class Profil:
     def fermer_clavier(self):
         """Désactive l'édition et ferme le clavier."""
         self.edition_pseudo = False
-        if not EST_WEB:
-            pygame.key.stop_text_input()
+        pygame.key.stop_text_input()
 
-    async def gerer_events(self, evenement):
+    async def gerer_events(self, evenement, ecran):
         """Gère les événements de la page profil"""
         if evenement.type == pygame.MOUSEBUTTONDOWN and evenement.button == 1:
             # Clic sur le bouton retour
@@ -421,11 +436,11 @@ class Profil:
                 self.son_select.play()
                 self.fermer_clavier()
                 return "quitter"
-            
+
             # Clic sur le pseudo pour l'éditer
             if self.pseudo_rect.collidepoint(evenement.pos):
                 self.son_select.play()
-                await self.ouvrir_clavier()
+                await self.ouvrir_clavier(ecran)
                 return None
             
             # Clic sur le bouton reset

@@ -43,4 +43,4 @@ Les effets sonores et musiques utilisés dans le jeu proviennent des plateformes
 
 **Emrecan45** - Conception, programmation, level design, et intégration de tous les assets.
 
-*Les assets tiers sont utilisés conformément à leurs licences respectives (libre de droits / usage personnel). Le code source de ColorMage est distribué sous licence MIT.*
+*Les assets tiers sont utilisés conformément à leurs licences respectives (libre de droits / usage personnel). Le code source et les assets originaux de ColorMage sont publiés tous droits réservés.*

@@ -6,6 +6,7 @@ __pycache__/
 dist/
 build/
 *.spec
+/temp_index.html
 
 tools/*
 !tools/build_web.py

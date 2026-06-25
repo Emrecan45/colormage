@@ -357,26 +357,19 @@ height="{{cookiecutter.height}}px"
             </div>
             <div id="intro-bar-pct" style="color:#ffffff; font-size:15px; font-weight:bold; margin-top:10px;">0%</div>
         </div>
-        <div id="intro-tap" style="display:none; position:absolute; top:66%; left:50%; transform:translate(-50%,-50%); color:#fff; font-family:arial; font-size:34px; font-weight:bold; text-align:center; animation:cmpulse 1.3s ease-in-out infinite;">Touchez pour jouer</div>
+        <div id="intro-tap" style="display:none; position:absolute; top:78%; left:50%; transform:translate(-50%,-50%); width:90%; color:#fff; font-family:arial; font-size:clamp(16px, 4.5vmin, 34px); font-weight:bold; text-align:center; animation:cmpulse 1.3s ease-in-out infinite;">Touchez pour jouer</div>
         <video id="intro-video" muted playsinline preload="auto"
             style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; background:#000;">
             <source src="video_intro.mp4" type="video/mp4">
         </video>
     </div>
-    <div id="cm-prompt-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:2000000; background:rgba(0,0,0,0.75); align-items:center; justify-content:center;">
-        <div style="background:#1a1a2e; border:2px solid #ffffff; border-radius:14px; padding:28px 24px; min-width:280px; max-width:88vw; text-align:center; font-family:arial;">
-            <div id="cm-prompt-label" style="color:#cfcfe0; font-size:17px; font-weight:bold; margin-bottom:16px;"></div>
-            <input id="cm-prompt-input" type="text" maxlength="15" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                style="width:100%; padding:10px 8px; border-radius:7px; border:2px solid #ffc83c; background:#0d0d1a; color:#fff; font-size:17px; box-sizing:border-box; margin-bottom:18px; outline:none;">
-            <div style="display:flex; gap:14px; justify-content:center;">
-                <button id="cm-prompt-cancel" style="padding:10px 22px; border-radius:7px; border:none; background:#444; color:#fff; font-size:15px; cursor:pointer;">Annuler</button>
-                <button id="cm-prompt-ok" style="padding:10px 22px; border-radius:7px; border:none; background:#ffc83c; color:#000; font-size:15px; font-weight:bold; cursor:pointer;">OK</button>
-            </div>
+    <div id="cm-kb-overlay" style="display:none; position:fixed; left:0; bottom:0; width:100%; z-index:2000000; font-family:arial;">
+        <div style="margin:0 auto; width:100%; max-width:780px; box-sizing:border-box; padding:6px; background:#1a1a2e; border-top:3px solid #ffc83c;">
+            <div id="cm-kb-keys"></div>
         </div>
     </div>
 
-    <audio id="intro-audio" preload="auto" src="intro.wav"></audio>
-    <audio id="bg-music" loop preload="auto" src="main_theme.ogg"></audio>
+    <audio id="intro-audio" preload="auto" src="assets/audio/intro.webaudio"></audio>
 
     <div id="infobox">Loading, please wait ...</div>
 
@@ -386,10 +379,10 @@ height="{{cookiecutter.height}}px"
 
         <div id="system" hidden>
             <div class="button-container">
-                <button id="aiostop" disabled>AIO ⏏︎</button>
-                <button id="aiopaused_true" disabled>AIO ■</button>
-                <button id="aiopaused_false" disabled>AIO ▶</button>
-                <button id="pygame_mixer_music_pause" disabled>Music ■</button>
+                <button id="aiostop" disabled>AIO ÔÅÅ´©Ä</button>
+                <button id="aiopaused_true" disabled>AIO Ôûá</button>
+                <button id="aiopaused_false" disabled>AIO ÔûÂ</button>
+                <button id="pygame_mixer_music_pause" disabled>Music Ôûá</button>
             </div>
 
             <div class="button-container">
@@ -464,11 +457,11 @@ frameborder="1"
     var colormage_textes_chargement = {
         fr: {
             chargement: "Chargement...",
-            telechargement: "Téléchargement du jeu",
-            decompression: "Décompression",
+            telechargement: "T\u00e9l\u00e9chargement du jeu",
+            decompression: "D\u00e9compression",
             compilation: "Compilation des modules",
-            pret: "Prêt !",
-            demarrage: "Démarrage",
+            pret: "Pr\u00eat !",
+            demarrage: "D\u00e9marrage",
             tap: "Touchez pour jouer"
         },
         en: {
@@ -578,17 +571,6 @@ frameborder="1"
                     a.muted = false;
                 }).catch(function () { a.muted = false; });
             }
-            var bg = document.getElementById("bg-music");
-            if (bg) {
-                bg.muted = true;
-                bg.play().then(function () {
-                    if (!window.colormage_music_intent) {
-                        bg.pause();
-                        bg.currentTime = 0;
-                    }
-                    bg.muted = false;
-                }).catch(function () { bg.muted = false; });
-            }
             try {
                 var actx = colormage_actx_get();
                 if (actx.state === "suspended") {
@@ -608,7 +590,9 @@ frameborder="1"
         document.addEventListener("keydown", unlock, true);
     })();
 
-    document.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener("touchmove", function (e) {
+        e.preventDefault();
+    }, { passive: false });
 
     // Affiche "Touchez pour jouer" quand pygbag attend le geste utilisateur
     window.colormage_show_tap_prompt = function () {
@@ -692,62 +676,134 @@ frameborder="1"
     window.colormage_music_volume = 0.5;
     window.colormage_music_intent = false;
     window.colormage_bg_gain = null;
+    window.colormage_music_buffer = null;
+    window.colormage_music_source = null;
+    window.colormage_music_startTime = 0;
+    window.colormage_music_pausedAt = 0;
+    window.colormage_music_cache = {};
+
+    window.colormage_preload_music = function(fichier) {
+        if (window.colormage_music_cache[fichier]) return Promise.resolve();
+        var actx = colormage_actx_get();
+        return fetch(fichier).then(function(r) { return r.arrayBuffer(); })
+            .then(function(buf) { return actx.decodeAudioData(buf); })
+            .then(function(audio) { window.colormage_music_cache[fichier] = audio; })
+            .catch(function(e) { console.log("Preload fail:", fichier, e); });
+    };
+
+    // Preload lent en arriere-plan
+    setTimeout(function() {
+        var musics = [
+            "assets/audio/main_theme.webaudio",
+            "assets/audio/market.webaudio",
+            "assets/audio/terra.webaudio",
+            "assets/audio/pyros.webaudio",
+            "assets/audio/pyros_boss.webaudio",
+            "assets/audio/aquaris.webaudio",
+            "assets/audio/vortex.webaudio"
+        ];
+        var i = 0;
+        function loadNext() {
+            if (i >= musics.length) return;
+            window.colormage_preload_music(musics[i]).then(loadNext);
+            i++;
+        }
+        loadNext();
+    }, 2000);
 
     function init_bg_audio() {
-        var a = document.getElementById("bg-music");
-        if (!a) return;
         var actx = colormage_actx_get();
         if (!window.colormage_bg_gain) {
-            try {
-                var source = actx.createMediaElementSource(a);
-                window.colormage_bg_gain = actx.createGain();
-                window.colormage_bg_gain.gain.value = window.colormage_music_volume;
-                source.connect(window.colormage_bg_gain);
-                window.colormage_bg_gain.connect(actx.destination);
-            } catch(e) {}
+            window.colormage_bg_gain = actx.createGain();
+            window.colormage_bg_gain.connect(actx.destination);
         }
+        window.colormage_bg_gain.gain.value = window.colormage_music_volume;
+        return actx;
+    }
+
+    function _start_music_source() {
+        var actx = init_bg_audio();
+        if (window.colormage_music_source) {
+            try { window.colormage_music_source.stop(); } catch(e) {}
+            try { window.colormage_music_source.disconnect(); } catch(e) {}
+        }
+        window.colormage_music_source = actx.createBufferSource();
+        window.colormage_music_source.buffer = window.colormage_music_buffer;
+        window.colormage_music_source.loop = true;
+        window.colormage_music_source.connect(window.colormage_bg_gain);
+        
+        var offset = window.colormage_music_pausedAt % window.colormage_music_buffer.duration;
+        if (isNaN(offset)) offset = 0;
+        
+        window.colormage_music_source.start(0, offset);
+        window.colormage_music_startTime = actx.currentTime - offset;
     }
 
     window.colormage_play_music = function (fichier) {
-        var a = document.getElementById("bg-music");
-        if (!a) {
+        var actx = init_bg_audio();
+        window.colormage_music_intent = true;
+        window.colormage_music_pausedAt = 0;
+        
+        if (window.colormage_music_source) {
+            try { window.colormage_music_source.stop(); } catch(e) {}
+            window.colormage_music_source = null;
+        }
+
+        if (window.colormage_music_cache[fichier]) {
+            window.colormage_music_buffer = window.colormage_music_cache[fichier];
+            if (window.colormage_music_intent) {
+                _start_music_source();
+            }
             return;
         }
-        init_bg_audio();
-        if (a.getAttribute("src") !== fichier) {
-            a.setAttribute("src", fichier);
-        }
-        window.colormage_music_intent = true;
-        if (window.colormage_bg_gain) {
-            window.colormage_bg_gain.gain.value = window.colormage_music_volume;
-        } else {
-            a.volume = window.colormage_music_volume;
-        }
-        a.play().catch(function () {});
+
+        fetch(fichier).then(function(r) {
+            return r.arrayBuffer();
+        }).then(function(buf) {
+            return actx.decodeAudioData(buf);
+        }).then(function(audio) {
+            window.colormage_music_cache[fichier] = audio;
+            window.colormage_music_buffer = audio;
+            if (window.colormage_music_intent) {
+                _start_music_source();
+            }
+        }).catch(function(e) {
+            console.log("Lecture musique bloquee :", e);
+        });
     };
     window.colormage_set_music_volume = function (v) {
-        window.colormage_music_volume = v;
-        var a = document.getElementById("bg-music");
-        if (!a) return;
-        if (!window.colormage_bg_gain) {
-            init_bg_audio();
-        }
-        if (window.colormage_bg_gain) {
-            window.colormage_bg_gain.gain.value = v;
-        } else {
-            a.volume = v;
-        }
-        if (v > 0 && window.colormage_music_intent && a.paused) {
-            a.play().catch(function () {});
+        var vol = parseFloat(v);
+        window.colormage_music_volume = vol;
+        init_bg_audio();
+        if (vol > 0 && window.colormage_music_intent && !window.colormage_music_source && window.colormage_music_buffer) {
+            _start_music_source();
         }
     };
     window.colormage_stop_music = function () {
-        var a = document.getElementById("bg-music");
         window.colormage_music_intent = false;
-        if (a) {
-            a.pause();
-            a.currentTime = 0;
+        var actx = colormage_actx_get();
+        if (window.colormage_music_source) {
+            window.colormage_music_pausedAt = actx.currentTime - window.colormage_music_startTime;
+            try { window.colormage_music_source.stop(); } catch(e) {}
+            window.colormage_music_source = null;
         }
+    };
+
+    // Coupe tout l'audio web (appele au quit : pygame.quit() n'arrete pas
+    // l'audio gere par le navigateur)
+    window.colormage_stop_all_audio = function () {
+        window.colormage_stop_music();
+        var a = document.getElementById("intro-audio");
+        if (a) {
+            try { a.pause(); } catch(e) {}
+        }
+        for (var nom in window.colormage_sfx_loops) {
+            var src = window.colormage_sfx_loops[nom];
+            if (src) {
+                try { src.stop(); } catch(e) {}
+            }
+        }
+        window.colormage_sfx_loops = {};
     };
 
     // Effets sonores via Web Audio API
@@ -777,23 +833,27 @@ frameborder="1"
             window.colormage_sfx_buffers[nom] = audio;
         }).catch(function () {});
     };
-    window.colormage_play_sfx = function (nom, volume, boucle) {
+    window.colormage_play_sfx = function (json_str) {
+        var args = JSON.parse(json_str);
+        var nom = args.nom;
+        var volume = args.volume;
+        var boucle = args.boucle;
         var actx = colormage_actx_get();
         var buffer = window.colormage_sfx_buffers[nom];
         if (!actx || !buffer) {
             return;
         }
-        if (actx.state === "suspended") {
-            actx.resume();
-        }
+
         var src = actx.createBufferSource();
         src.buffer = buffer;
-        src.loop = boucle;
         var gain = actx.createGain();
         gain.gain.value = volume;
+
         src.connect(gain);
         gain.connect(actx.destination);
-        src.start();
+        src.loop = boucle;
+        src.start(0);
+
         if (boucle) {
             var prec = window.colormage_sfx_loops[nom];
             if (prec) {
@@ -804,7 +864,10 @@ frameborder="1"
             window.colormage_sfx_loops[nom] = { src: src, gain: gain };
         }
     };
-    window.colormage_set_sfx_volume = function (nom, volume) {
+    window.colormage_set_sfx_volume = function (json_str) {
+        var args = JSON.parse(json_str);
+        var nom = args.nom;
+        var volume = args.volume;
         var l = window.colormage_sfx_loops[nom];
         if (l) {
             l.gain.gain.value = volume;
@@ -821,42 +884,208 @@ frameborder="1"
     };
     window.colormage_prompt_done = false;
     window.colormage_prompt_result = null;
+    window.colormage_prompt_open = false;
+    window.colormage_kb_text = "";
 
     (function () {
-        function cm_prompt_resolve(value) {
-            window.colormage_prompt_result = value;
-            window.colormage_prompt_done = true;
-            var ov = document.getElementById("cm-prompt-overlay");
-            if (ov) ov.style.display = "none";
+        var cm_kb_maj = false;
+        var cm_kb_max = 15;
+
+        var cm_kb_layouts = {
+            fr: ["1234567890", "azertyuiop", "qsdfghjklm", "wxcvbn"],
+            en: ["1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm"]
+        };
+
+        var cm_kb_textes = {
+            fr: { annuler: "Annuler", maj: "Maj", espace: "Espace", effacer: "Effacer" },
+            en: { annuler: "Cancel", maj: "Shift", espace: "Space", effacer: "Delete" }
+        };
+
+        function cm_kb_ajouter(c) {
+            if (window.colormage_kb_text.length >= cm_kb_max) {
+                return;
+            }
+            window.colormage_kb_text = window.colormage_kb_text + c;
         }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            var ok = document.getElementById("cm-prompt-ok");
-            var cancel = document.getElementById("cm-prompt-cancel");
-            var input = document.getElementById("cm-prompt-input");
-            if (ok) ok.addEventListener("click", function () {
-                cm_prompt_resolve(input ? input.value : "");
-            });
-            if (cancel) cancel.addEventListener("click", function () {
-                cm_prompt_resolve(null);
-            });
-            if (input) input.addEventListener("keydown", function (e) {
-                if (e.key === "Enter") cm_prompt_resolve(input.value);
-                if (e.key === "Escape") cm_prompt_resolve(null);
-            });
-        });
+        function cm_kb_effacer() {
+            if (window.colormage_kb_text.length === 0) {
+                return;
+            }
+            window.colormage_kb_text = window.colormage_kb_text.substring(0, window.colormage_kb_text.length - 1);
+        }
 
-        window.colormage_show_prompt = function (msg, def_val) {
-            var ov = document.getElementById("cm-prompt-overlay");
-            var lbl = document.getElementById("cm-prompt-label");
-            var inp = document.getElementById("cm-prompt-input");
-            if (lbl) lbl.innerText = msg || "";
-            if (inp) { inp.value = def_val || ""; }
+        function cm_prompt_resolve(value) {
+            if (!window.colormage_prompt_open) {
+                return;
+            }
+            window.colormage_prompt_result = value;
+            window.colormage_prompt_done = true;
+            window.colormage_prompt_open = false;
+            var ov = document.getElementById("cm-kb-overlay");
+            if (ov) {
+                ov.style.display = "none";
+            }
+        }
+
+        function cm_kb_bouton(label, action, poids) {
+            var b = document.createElement("button");
+            b.textContent = label;
+            b.style.flex = poids;
+            b.style.margin = "2px";
+            b.style.padding = "6px 0";
+            b.style.fontSize = "15px";
+            b.style.fontWeight = "bold";
+            b.style.borderRadius = "6px";
+            b.style.border = "none";
+            b.style.background = "#3a2d5c";
+            b.style.color = "#ffffff";
+            b.style.cursor = "pointer";
+            b.style.touchAction = "manipulation";
+            b.addEventListener("pointerdown", function (e) {
+                e.preventDefault();
+                action();
+            });
+            return b;
+        }
+
+        function cm_kb_lettre(lettre) {
+            var b = cm_kb_bouton(lettre, function () {
+                if (cm_kb_maj) {
+                    cm_kb_ajouter(lettre.toUpperCase());
+                } else {
+                    cm_kb_ajouter(lettre);
+                }
+            }, "1");
+            b.setAttribute("data-lettre", lettre);
+            return b;
+        }
+
+        function cm_kb_rafraichir_casse() {
+            var keys = document.getElementById("cm-kb-keys");
+            if (!keys) {
+                return;
+            }
+            var boutons = keys.querySelectorAll("button[data-lettre]");
+            var i = 0;
+            while (i < boutons.length) {
+                var b = boutons[i];
+                var lettre = b.getAttribute("data-lettre");
+                if (cm_kb_maj) {
+                    b.textContent = lettre.toUpperCase();
+                } else {
+                    b.textContent = lettre;
+                }
+                i = i + 1;
+            }
+        }
+
+        function cm_kb_construire(langue) {
+            var keys = document.getElementById("cm-kb-keys");
+            if (!keys) {
+                return;
+            }
+            keys.innerHTML = "";
+            var txt = cm_kb_textes[langue];
+            if (!txt) {
+                txt = cm_kb_textes.en;
+            }
+            var layout = cm_kb_layouts[langue];
+            if (!layout) {
+                layout = cm_kb_layouts.en;
+            }
+            var r = 0;
+            while (r < layout.length) {
+                var ligne = document.createElement("div");
+                ligne.style.display = "flex";
+                ligne.style.justifyContent = "center";
+                var rangee = layout[r];
+                var k = 0;
+                while (k < rangee.length) {
+                    ligne.appendChild(cm_kb_lettre(rangee.charAt(k)));
+                    k = k + 1;
+                }
+                keys.appendChild(ligne);
+                r = r + 1;
+            }
+
+            var actions = document.createElement("div");
+            actions.style.display = "flex";
+            actions.style.justifyContent = "center";
+            actions.appendChild(cm_kb_bouton(txt.maj, function () {
+                cm_kb_maj = !cm_kb_maj;
+                cm_kb_rafraichir_casse();
+            }, "1.5"));
+            actions.appendChild(cm_kb_bouton(txt.espace, function () {
+                cm_kb_ajouter(" ");
+            }, "3"));
+            actions.appendChild(cm_kb_bouton(txt.effacer, function () {
+                cm_kb_effacer();
+            }, "1.5"));
+            keys.appendChild(actions);
+
+            var valid = document.createElement("div");
+            valid.style.display = "flex";
+            valid.style.justifyContent = "center";
+            valid.appendChild(cm_kb_bouton(txt.annuler, function () {
+                cm_prompt_resolve(null);
+            }, "1"));
+            var ok = cm_kb_bouton("OK", function () {
+                cm_prompt_resolve(window.colormage_kb_text);
+            }, "1");
+            ok.style.background = "#ffc83c";
+            ok.style.color = "#000000";
+            valid.appendChild(ok);
+            keys.appendChild(valid);
+        }
+
+        function cm_kb_clavier(e) {
+            if (!window.colormage_prompt_open) {
+                return;
+            }
+            e.stopImmediatePropagation();
+            if (e.type !== "keydown") {
+                return;
+            }
+            if (e.key === "Enter") {
+                cm_prompt_resolve(window.colormage_kb_text);
+                return;
+            }
+            if (e.key === "Escape") {
+                cm_prompt_resolve(null);
+                return;
+            }
+            if (e.key === "Backspace") {
+                cm_kb_effacer();
+                return;
+            }
+            if (e.key.length === 1) {
+                cm_kb_ajouter(e.key);
+            }
+        }
+        window.addEventListener("keydown", cm_kb_clavier, true);
+        window.addEventListener("keyup", cm_kb_clavier, true);
+        window.addEventListener("keypress", cm_kb_clavier, true);
+
+        window.colormage_show_prompt = function (json_str) {
+            var a = JSON.parse(json_str);
+            window.colormage_kb_text = a.val;
+            if (!window.colormage_kb_text) {
+                window.colormage_kb_text = "";
+            }
+            cm_kb_maj = false;
             window.colormage_prompt_done = false;
             window.colormage_prompt_result = null;
+            window.colormage_prompt_open = true;
+
+            var langue = a.langue;
+            if (!langue) {
+                langue = "en";
+            }
+            cm_kb_construire(langue);
+            var ov = document.getElementById("cm-kb-overlay");
             if (ov) {
-                ov.style.display = "flex";
-                if (inp) setTimeout(function () { inp.focus(); inp.select(); }, 80);
+                ov.style.display = "block";
             }
         };
     })();

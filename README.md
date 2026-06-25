@@ -10,7 +10,7 @@ La clé du succès : vous ne pouvez interagir qu'avec les éléments qui corresp
 ![Version](https://img.shields.io/badge/version-v2.4-blue)
 ![Python](https://img.shields.io/badge/python-3.8%2B-yellow)
 ![Pygame](https://img.shields.io/badge/pygame-latest-green)
-![Licence](https://img.shields.io/badge/licence-MIT-lightgrey)
+![Licence](https://img.shields.io/badge/licence-tous%20droits%20r%C3%A9serv%C3%A9s-lightgrey)
 
 </div>
 
@@ -177,7 +177,7 @@ ColorMage/
 │   ├── audio/              # Sons et musiques
 │   └── img/                # Images, avatars, sprites, UI
 ├── tools/                  # Outils de build web (build_web.py, web.tmpl)
-├── LICENSE                 # Licence du projet (MIT)
+├── LICENSE                 # Licence du projet (tous droits réservés)
 ├── CREDITS.md              # Crédits et sources des assets
 ├── BUILD.md                # Génération des builds (bureau + web)
 ├── .gitignore              # Fichiers à ignorer par Git
@@ -202,5 +202,5 @@ Ce projet utilise des ressources graphiques originales et des contributions exte
 
 ## 📄 Licence
 
-Ce projet est distribué sous licence **MIT**. Voir le fichier [`LICENSE`](LICENSE) pour plus de détails.
+Ce projet est publié **tous droits réservés**. Le code est visible à titre de démonstration : copier, modifier, redistribuer ou héberger le jeu ailleurs, ou en faire un usage commercial, est interdit sans mon accord explicite. Voir le fichier [`LICENSE`](LICENSE) pour plus de détails.
 
